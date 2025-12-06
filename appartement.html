@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Schatting appartement - opname ter plaatse</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0077c8" />
+
+  <!-- PWA / iOS app-achtige instellingen -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Schatting appartement">
+  
+
+  <style>
+    :root {
+      --spacing: 0.75rem;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: var(--spacing);
+      background: #f5f5f5;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: var(--spacing);
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      margin-top: 0;
+      margin-bottom: var(--spacing);
+    }
+
+    fieldset {
+      margin-bottom: 1rem;
+      padding: var(--spacing);
+      border-radius: 6px;
+      border: 1px solid #ddd;
+    }
+
+    legend {
+      font-weight: 600;
+      padding: 0 0.3rem;
+    }
+
+    .row {
+      display: flex;
+      gap: var(--spacing);
+      margin-bottom: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .field {
+      flex: 1 1 220px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      font-size: 0.9rem;
+      margin-bottom: 0.2rem;
+    }
+
+    input, select, textarea, button {
+      padding: 0.5rem;
+      font-size: 0.95rem;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    textarea {
+      min-height: 70px;
+    }
+
+    button {
+      padding: 0.7rem 1.2rem;
+      font-size: 1rem;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: #0077c8;
+      color: #ffffff;
+    }
+
+    .btn-secondary {
+      background: #555555;
+      color: #ffffff;
+    }
+
+    #json-output {
+      width: 100%;
+      margin-top: 1rem;
+      font-family: "Courier New", monospace;
+      font-size: 0.85rem;
+      min-height: 160px;
+      white-space: pre;
+    }
+
+    .json-label {
+      margin-top: 1rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 900px) {
+      body {
+        padding: 0.5rem;
+      }
+
+      .container {
+        padding: 0.75rem;
+        box-shadow: none;
+        border-radius: 0;
+      }
+
+      .row {
+        flex-direction: column;
+      }
+
+      .field {
+        flex: 1 1 100%;
+      }
+
+      label {
+        font-size: 1rem;
+      }
+
+      input, select, textarea {
+        font-size: 1rem;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<div class="container">
+  <h1>Schatting appartement - opnameformulier</h1>
+
+  <form id="appartement-form">
+
+    <!-- 1. Identificatie & context -->
+    <fieldset>
+      <legend>1. Identificatie en context</legend>
+
+      <div class="row">
+        <div class="field">
+          <label>Naam aanvrager</label>
+          <input type="text" name="identificatie.aanvrager.naam" />
+        </div>
+        <div class="field">
+          <label>Telefoonnummer</label>
+          <input type="tel" name="identificatie.aanvrager.telefoonnummer" />
+        </div>  
+         <div class="field">
+          <label>Datum afspraak</label>
+          <input type="datetime-local" name="identificatie.aanvrager.afspraak" />
+        </div>  
+        
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Straat + nr, bus</label>
+          <input type="text" name="identificatie.adres.straat_en_nummer" />
+        </div>
+        <div class="field">
+          <label>Postcode</label>
+          <input type="text" name="identificatie.adres.postcode" />
+        </div>
+        <div class="field">
+          <label>Gemeente</label>
+          <input type="text" name="identificatie.adres.gemeente" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Type dossier</label>
+          <select name="identificatie.dossier_type">
+            <option value="">-- kies --</option>
+            <option>Verkoop</option>
+            <option>Erfenis</option>
+            <option>Schenking</option>
+            <option>Echtscheiding</option>
+            <option>Fiscale</option>
+            <option>Andere</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Type appartement</label>
+          <select name="identificatie.appartement_type">
+            <option value="">-- kies --</option>
+            <option>Studio</option>
+            <option>1-slaapkamer</option>
+            <option>2-slaapkamer</option>
+            <option>3-slaapkamer</option>
+            <option>4plus-slaapkamer</option>
+            <option>Duplex</option>
+            <option>Penthouse</option>
+            <option>Gelijkvloers met tuin</option>
+            <option>Serviceflat / assisted living</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Doel van de schatting</label>
+          <input type="text" name="identificatie.doel_schatting" />
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- 2. Gebouw / mede-eigendom -->
+    <fieldset>
+      <legend>2. Gebouw en mede-eigendom</legend>
+
+      <div class="row">
+        <div class="field">
+          <label>Naam gebouw / residentie</label>
+          <input type="text" name="gebouw.naam" />
+        </div>
+        <div class="field">
+          <label>Bouwjaar (raming ok)</label>
+          <input type="number" name="gebouw.bouwjaar" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Aantal verdiepingen gebouw</label>
+          <input type="number" name="gebouw.aantal_verdiepingen" />
+        </div>
+        <div class="field">
+          <label>Aantal appartementen in het gebouw</label>
+          <input type="number" name="gebouw.aantal_appartementen" />
+        </div>
+        <div class="field">
+          <label>Aantal ingangen / blokken</label>
+          <input type="number" name="gebouw.aantal_ingangen" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Staat gevel</label>
+          <select name="gebouw.staat_gevel">
+            <option value="">-- kies --</option>
+            <option>Zeer goed</option>
+            <option>Goed</option>
+            <option>Redelijk</option>
+            <option>Slecht</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Staat dak</label>
+          <select name="gebouw.staat_dak">
+            <option value="">-- kies --</option>
+            <option>Zeer goed</option>
+            <option>Goed</option>
+            <option>Redelijk</option>
+            <option>Slecht</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Type dak</label>
+          <select name="gebouw.type_dak">
+            <option value="">-- kies --</option>
+            <option>Plat</option>
+            <option>Hellend</option>
+            <option>Combinatie</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Lift aanwezig?</label>
+          <select name="gebouw.lift.aanwezig">
+            <option value="">-- kies --</option>
+            <option>Ja</option>
+            <option>Nee</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Aantal liften</label>
+          <input type="number" name="gebouw.lift.aantal" />
+        </div>
+        <div class="field">
+          <label>Lift bereikt verdieping?</label>
+          <select name="gebouw.lift.bereikt_verdieping">
+            <option value="">-- kies --</option>
+            <option>Ja</option>
+            <option>Nee</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Maandelijkse provisie mede-eigendom (euro)</label>
+          <input type="number" step="0.01" name="gebouw.mede_eigendom.provisie_maandelijks" />
+        </div>
+        <div class="field">
+          <label>Fonds grote werken - aandeel (euro)</label>
+          <input type="number" step="0.01" name="gebouw.mede_eigendom.reservefonds_aandeel" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Reeds uitgevoerde werken (samenvatting)</label>
+          <textarea name="gebouw.mede_eigendom.werken_recent"></textarea>
+        </div>
+        <div class="field">
+          <label>Geplande werken / beslissingen AV</label>
+          <textarea name="gebouw.mede_eigendom.werken_gepland"></textarea>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- 3. Het appartement zelf -->
+    <fieldset>
+      <legend>3. Het appartement zelf</legend>
+
+      <div class="row">
+        <div class="field">
+          <label>Verdieping</label>
+          <input type="text" name="appartement.verdieping" />
+        </div>
+        <div class="field">
+          <label>Ligging t.o.v. straat</label>
+          <select name="appartement.ligging_tov_straat">
+            <option value="">-- kies --</option>
+            <option>Voorzijde</option>
+            <option>Achterzijde</option>
+            <option>Doorlopend voor-achter</option>
+            <option>Hoekappartement</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Orientatie leefruimte / hoofdterras</label>
+          <select name="appartement.orientatie_leefruimte">
+            <option value="">-- kies --</option>
+            <option>N</option><option>NO</option><option>O</option><option>ZO</option>
+            <option>Z</option><option>ZW</option><option>W</option><option>NW</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Bewoonbare oppervlakte (m2)</label>
+          <input type="number" step="0.1" name="appartement.oppervlakte_bewoonbaar" />
+        </div>
+        <div class="field">
+          <label>Oppervlakte volgens</label>
+          <select name="appartement.oppervlakte_bron">
+            <option value="">-- kies --</option>
+            <option>Plan</option>
+            <option>Meten ter plaatse</option>
+            <option>Schatting</option>
+            <option>Niet gekend</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Aantal slaapkamers</label>
+          <input type="number" name="appartement.aantal_slaapkamers" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Aantal badkamers</label>
+          <input type="number" name="appartement.badkamers.aantal" />
+        </div>
+        <div class="field">
+          <label>Type badkamer</label>
+          <input type="text" name="appartement.badkamers.type" />
+        </div>
+        <div class="field">
+          <label>Aantal toiletten</label>
+          <input type="number" name="appartement.toiletten.aantal" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Vloeren (korte beschrijving)</label>
+          <textarea name="appartement.afwerking.vloeren"></textarea>
+        </div>
+        <div class="field">
+          <label>Ramen (materiaal, beglazing, jaar)</label>
+          <textarea name="appartement.afwerking.ramen"></textarea>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Keuken - jaar (raming)</label>
+          <input type="number" name="appartement.keuken.jaar" />
+        </div>
+        <div class="field">
+          <label>Keuken - staat</label>
+          <select name="appartement.keuken.staat">
+            <option value="">-- kies --</option>
+            <option>Zeer goed / recent</option>
+            <option>Goed</option>
+            <option>Opfrissing</option>
+            <option>Te renoveren</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Badkamer - jaar (raming)</label>
+          <input type="number" name="appartement.badkamer.jaar" />
+        </div>
+        <div class="field">
+          <label>Badkamer - staat</label>
+          <select name="appartement.badkamer.staat">
+            <option value="">-- kies --</option>
+            <option>Zeer goed / recent</option>
+            <option>Goed</option>
+            <option>Opfrissing</option>
+            <option>Volledige renovatie</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Elektrische keuring aanwezig?</label>
+          <select name="appartement.elektriciteit.keuring_aanwezig">
+            <option value="">-- kies --</option>
+            <option>Ja</option>
+            <option>Nee</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Elektrische installatie conform?</label>
+          <select name="appartement.elektriciteit.conform">
+            <option value="">-- kies --</option>
+            <option>Ja</option>
+            <option>Nee</option>
+            <option>Onbekend</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Datum verslag</label>
+          <input type="date" name="appartement.elektriciteit.datum_verslag" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Verwarming - type</label>
+          <select name="appartement.verwarming.type">
+            <option value="">-- kies --</option>
+            <option>Individuele ketel gas</option>
+            <option>Individuele ketel mazout</option>
+            <option>Individuele warmtepomp</option>
+            <option>Gemeenschappelijke ketel</option>
+            <option>Elektrisch</option>
+            <option>Andere</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Verwarming - jaar installatie</label>
+          <input type="number" name="appartement.verwarming.jaar" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Daglicht leefruimte</label>
+          <select name="appartement.licht.leefruimte">
+            <option value="">-- kies --</option>
+            <option>Weinig</option>
+            <option>Gemiddeld</option>
+            <option>Veel</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Daglicht slaapkamers</label>
+          <select name="appartement.licht.slaapkamers">
+            <option value="">-- kies --</option>
+            <option>Weinig</option>
+            <option>Gemiddeld</option>
+            <option>Veel</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Inkijk / privacy</label>
+          <select name="appartement.licht.inkijk">
+            <option value="">-- kies --</option>
+            <option>Veel</option>
+            <option>Beperkt</option>
+            <option>Weinig</option>
+          </select>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- 4. Buitenruimtes & annexen -->
+    <fieldset>
+      <legend>4. Buitenruimtes en annexen</legend>
+
+      <div class="row">
+        <div class="field">
+          <label>Aantal terrassen/balkons</label>
+          <input type="number" name="buitenruimtes.terras.aantal" />
+        </div>
+        <div class="field">
+          <label>Totale terrasoppervlakte (m2)</label>
+          <input type="number" step="0.1" name="buitenruimtes.terras.oppervlakte_totaal" />
+        </div>
+        <div class="field">
+          <label>Hoofdterras - orientatie</label>
+          <select name="buitenruimtes.terras.orientatie_hoofdsterras">
+            <option value="">-- kies --</option>
+            <option>N</option><option>NO</option><option>O</option><option>ZO</option>
+            <option>Z</option><option>ZW</option><option>W</option><option>NW</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Privetuin aanwezig?</label>
+          <select name="buitenruimtes.prive_tuin.aanwezig">
+            <option value="">-- kies --</option>
+            <option>Ja</option>
+            <option>Nee</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Tuinoppervlakte (m2, raming)</label>
+          <input type="number" step="0.1" name="buitenruimtes.prive_tuin.oppervlakte" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Kelderberging</label>
+          <select name="annexen.kelder.aanwezig">
+            <option value="">-- kies --</option>
+            <option>Ja</option>
+            <option>Nee</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Kelder - oppervlakte (m2, raming)</label>
+          <input type="number" step="0.1" name="annexen.kelder.oppervlakte" />
+        </div>
+        <div class="field">
+          <label>Kelder - opmerkingen</label>
+          <textarea name="annexen.kelder.opmerkingen"></textarea>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Parkeerplaats / garage - type</label>
+          <select name="annexen.parking.type">
+            <option value="">-- kies --</option>
+            <option>Geen</option>
+            <option>Bovengronds</option>
+            <option>Ondergronds</option>
+            <option>Carport</option>
+            <option>Box</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Aantal parkeerplaatsen/boxen</label>
+          <input type="number" name="annexen.parking.aantal" />
+        </div>
+        <div class="field">
+          <label>Inbegrepen in verkoop?</label>
+          <select name="annexen.parking.inbegrepen">
+            <option value="">-- kies --</option>
+            <option>Ja</option>
+            <option>Nee</option>
+            <option>Optioneel</option>
+          </select>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- 5. Juridische & administratieve info -->
+    <fieldset>
+      <legend>5. Juridische en administratieve info</legend>
+
+      <div class="row">
+        <div class="field">
+          <label>Kadastraal inkomen (KI)</label>
+          <input type="number" name="juridisch.ki" />
+        </div>
+        <div class="field">
+          <label>EPC - score</label>
+          <input type="number" name="juridisch.epc.score" />
+        </div>
+        <div class="field">
+          <label>EPC - label</label>
+          <input type="text" name="juridisch.epc.label" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>EPC - datum certificaat</label>
+          <input type="date" name="juridisch.epc.datum" />
+        </div>
+        <div class="field">
+          <label>Basisakte beschikbaar?</label>
+          <select name="juridisch.mede_eigendom.basisakte_beschikbaar">
+            <option value="">-- kies --</option>
+            <option>Ja</option>
+            <option>Nee</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Splitsingsplan beschikbaar?</label>
+          <select name="juridisch.mede_eigendom.splitsingsplan_beschikbaar">
+            <option value="">-- kies --</option>
+            <option>Ja</option>
+            <option>Nee</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Gerechtelijke procedures / bijzonderheden</label>
+          <textarea name="juridisch.procedures"></textarea>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- 6. Marktcontext & verhuurinfo -->
+    <fieldset>
+      <legend>6. Marktcontext en verhuurinfo</legend>
+
+      <div class="row">
+        <div class="field">
+          <label>Afstand tot openbaar vervoer (minuten te voet)</label>
+          <input type="number" name="marktcontext.afstand_openbaar_vervoer_min" />
+        </div>
+        <div class="field">
+          <label>Afstand tot winkels (minuten te voet)</label>
+          <input type="number" name="marktcontext.afstand_winkels_min" />
+        </div>
+        <div class="field">
+          <label>Afstand tot scholen (minuten fiets)</label>
+          <input type="number" name="marktcontext.afstand_scholen_min" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Buurtindruk</label>
+          <select name="marktcontext.buurt_indruk">
+            <option value="">-- kies --</option>
+            <option>Heel goed</option>
+            <option>Goed</option>
+            <option>Gemiddeld</option>
+            <option>Eerder zwak</option>
+            <option>Probleemwijk</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Buurt - opmerkingen</label>
+          <textarea name="marktcontext.buurt_opmerkingen"></textarea>
+        </div>
+      </div>
+
+      <hr />
+
+      <div class="row">
+        <div class="field">
+          <label>Is het appartement verhuurd?</label>
+          <select name="verhuur.verhuurd">
+            <option value="">-- kies --</option>
+            <option>Ja</option>
+            <option>Nee</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Huidige huurprijs (euro/maand)</label>
+          <input type="number" step="0.01" name="verhuur.huurprijs" />
+        </div>
+        <div class="field">
+          <label>Startdatum huurcontract</label>
+          <input type="date" name="verhuur.startdatum" />
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- 7. Notities & scores -->
+    <fieldset>
+      <legend>7. Notities en scores</legend>
+
+      <div class="row">
+        <div class="field">
+          <label>Belangrijkste pluspunten</label>
+          <textarea name="samenvatting.pluspunten"></textarea>
+        </div>
+        <div class="field">
+          <label>Belangrijkste minpunten</label>
+          <textarea name="samenvatting.minpunten"></textarea>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Score ligging (1 tot 5)</label>
+          <input type="number" min="1" max="5" name="scores.ligging" />
+        </div>
+        <div class="field">
+          <label>Score gebouw / mede-eigendom (1 tot 5)</label>
+          <input type="number" min="1" max="5" name="scores.gebouw" />
+        </div>
+        <div class="field">
+          <label>Score afwerking appartement (1 tot 5)</label>
+          <input type="number" min="1" max="5" name="scores.afwerking" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Score licht en zicht (1 tot 5)</label>
+          <input type="number" min="1" max="5" name="scores.licht_en_zicht" />
+        </div>
+        <div class="field">
+          <label>Score buitenruimte (1 tot 5)</label>
+          <input type="number" min="1" max="5" name="scores.buitenruimte" />
+        </div>
+        <div class="field">
+          <label>Score parkeermogelijkheden (1 tot 5)</label>
+          <input type="number" min="1" max="5" name="scores.parking" />
+        </div>
+      </div>
+    </fieldset>
+
+    <div class="row">
+  <div class="field" style="flex:0 0 auto;">
+    <button class="btn-primary" type="submit">JSON genereren</button>
+  </div>
+
+  <div class="field" style="flex:0 0 auto;">
+    <button class="btn-secondary" type="button" id="btn-pdf">Maak PDF</button>
+  </div>
+
+  <div class="field" style="flex:0 0 auto;">
+    <button class="btn-ghost" type="button" id="btn-download">Download JSON</button>
+  </div>
+
+  <div class="field" style="flex:0 0 auto;">
+    <label class="btn-ghost" for="file-json"
+           style="text-align:center; padding-top:0.7rem; padding-bottom:0.7rem; cursor:pointer;">
+      Laad JSON-bestand
+    </label>
+    <input type="file" id="file-json" accept="application/json" style="display:none;" />
+  </div>
+
+  <div class="field" style="flex:0 0 auto;">
+    <button class="btn-ghost" type="button" id="btn-clear">Formulier leegmaken</button>
+  </div>
+</div>
+
+
+  </form>
+
+  <div class="json-label">JSON-resultaat (kopieerbaar, wordt niet automatisch opgeslagen):</div>
+  <textarea id="json-output" readonly></textarea>
+
+</div>
+
+<script>
+  var STORAGE_KEY = "appartement_form_v1";
+
+  function buildFormDataObject(form) {
+    var formData = new FormData(form);
+    var data = {};
+
+    formData.forEach(function (value, key) {
+      if (value === "") return;
+      var parts = key.split(".");
+      var current = data;
+
+      for (var i = 0; i < parts.length - 1; i++) {
+        var p = parts[i];
+        if (!current[p]) current[p] = {};
+        current = current[p];
+      }
+      current[parts[parts.length - 1]] = value;
+    });
+
+    return data;
+  }
+
+  function getValueFromObject(data, path) {
+    var parts = path.split(".");
+    var current = data;
+    for (var i = 0; i < parts.length; i++) {
+      if (!current || typeof current !== "object") return "";
+      current = current[parts[i]];
+    }
+    return current == null ? "" : current;
+  }
+
+  function saveFormToStorage(form) {
+    var data = buildFormDataObject(form);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+      console.warn("Kan niet opslaan in localStorage:", e);
+    }
+  }
+
+  function loadFormFromStorage(form) {
+    try {
+      var stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) return;
+      var data = JSON.parse(stored);
+
+      var elements = form.querySelectorAll("input, select, textarea");
+      elements.forEach(function (el) {
+        if (!el.name) return;
+        var val = getValueFromObject(data, el.name);
+        if (val !== "" && val !== undefined) {
+          el.value = val;
+        }
+      });
+    } catch (e) {
+      console.warn("Kan data niet laden uit localStorage:", e);
+    }
+  }
+
+  function clearFormAndStorage(form, jsonOutput) {
+    form.reset();
+    jsonOutput.value = "";
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (e) {
+      console.warn("Kan localStorage niet leegmaken:", e);
+    }
+  }
+
+  var formEl = document.getElementById("appartement-form");
+  var jsonOutput = document.getElementById("json-output");
+  var pdfBtn = document.getElementById("btn-pdf");
+  var clearBtn = document.getElementById("btn-clear");
+  var downloadBtn = document.getElementById("btn-download");
+  var fileInput = document.getElementById("file-json");
+
+  // Bij laden: poging om uit storage te vullen
+  loadFormFromStorage(formEl);
+
+  // Bij elke wijziging: automatisch opslaan
+  formEl.addEventListener("input", function () {
+    saveFormToStorage(formEl);
+  });
+  formEl.addEventListener("change", function () {
+    saveFormToStorage(formEl);
+  });
+
+  // JSON genereren
+  formEl.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var data = buildFormDataObject(formEl);
+    var jsonString = JSON.stringify(data, null, 2);
+    jsonOutput.value = jsonString;
+    saveFormToStorage(formEl);
+    alert("JSON gegenereerd - onderaan zichtbaar.");
+  });
+
+  // PDF: huidige pagina afdrukken
+  pdfBtn.addEventListener("click", function () {
+    var data = buildFormDataObject(formEl);
+    var jsonString = JSON.stringify(data, null, 2);
+    jsonOutput.value = jsonString;
+    saveFormToStorage(formEl);
+    window.print();
+  });
+
+  // Formulier leegmaken + opslag wissen
+  clearBtn.addEventListener("click", function () {
+    if (confirm("Ben je zeker dat je alle ingevulde gegevens wil wissen?")) {
+      clearFormAndStorage(formEl, jsonOutput);
+    }
+  });
+
+  // Download JSON-bestand
+  downloadBtn.addEventListener("click", function () {
+    var data = buildFormDataObject(formEl);
+    var jsonString = JSON.stringify(data, null, 2);
+    jsonOutput.value = jsonString;
+    saveFormToStorage(formEl);
+
+    var blob = new Blob([jsonString], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+
+    var adres = getValueFromObject(data, "identificatie.adres.straat_en_nummer") || "appartement";
+    var vandaag = new Date();
+    var yyyy = vandaag.getFullYear();
+    var mm = String(vandaag.getMonth() + 1).padStart(2, "0");
+    var dd = String(vandaag.getDate()).padStart(2, "0");
+    var bestandsnaam = adres.replace(/[^a-z0-9\-]+/gi, "_") + "_" + yyyy + mm + dd + ".json";
+
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = bestandsnaam;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  // JSON-bestand laden en formulier invullen
+  fileInput.addEventListener("change", function (e) {
+    var file = e.target.files[0];
+    if (!file) return;
+
+    var reader = new FileReader();
+    reader.onload = function (ev) {
+      try {
+        var data = JSON.parse(ev.target.result);
+
+        var elements = formEl.querySelectorAll("input, select, textarea");
+        elements.forEach(function (el) {
+          if (!el.name) return;
+          var val = getValueFromObject(data, el.name);
+          if (val !== "" && val !== undefined) {
+            el.value = val;
+          } else {
+            el.value = "";
+          }
+        });
+
+        jsonOutput.value = JSON.stringify(data, null, 2);
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        } catch (err) {
+          console.warn("Kan niet opslaan in localStorage na import:", err);
+        }
+
+        alert("JSON-bestand geladen en formulier ingevuld.");
+      } catch (err) {
+        alert("Kon JSON niet lezen. Is het wel een geldig JSON-bestand?");
+      }
+    };
+
+    reader.readAsText(file);
+  });
+</script>
+<script>
+  // Service worker registreren (voor PWA/offline)
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker
+        .register("sw.js")
+        .then(function (reg) {
+          console.log("Service worker geregistreerd:", reg.scope);
+        })
+        .catch(function (err) {
+          console.log("Service worker registratie mislukt:", err);
+        });
+    });
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+{
+  "identificatie": {
+   "aanvrager": {
+      "naam": "",
+      "telefoonnumer": "",
+      "afspraak":""
+    }, 
+    "adres": {
+      "straat_en_nummer": "",
+      "postcode": "",
+      "gemeente": ""
+    },
+    "dossier_type": "",
+    "appartement_type": "",
+    "doel_schatting": ""
+  },
+  "gebouw": {
+    "naam": "",
+    "bouwjaar": null,
+    "aantal_verdiepingen": null,
+    "aantal_appartementen": null,
+    "aantal_ingangen": null,
+    "staat_gevel": "",
+    "staat_dak": "",
+    "type_dak": "",
+    "lift": {
+      "aanwezig": "",
+      "aantal": null,
+      "bereikt_verdieping": ""
+    },
+    "mede_eigendom": {
+      "provisie_maandelijks": null,
+      "reservefonds_aandeel": null,
+      "werken_recent": "",
+      "werken_gepland": ""
+    }
+  },
+  "appartement": {
+    "verdieping": "",
+    "ligging_tov_straat": "",
+    "orientatie_leefruimte": "",
+    "oppervlakte_bewoonbaar": null,
+    "oppervlakte_bron": "",
+    "aantal_slaapkamers": null,
+    "badkamers": {
+      "aantal": null,
+      "type": ""
+    },
+    "toiletten": {
+      "aantal": null
+    },
+    "afwerking": {
+      "vloeren": "",
+      "ramen": ""
+    },
+    "keuken": {
+      "jaar": null,
+      "staat": ""
+    },
+    "badkamer": {
+      "jaar": null,
+      "staat": ""
+    },
+    "elektriciteit": {
+      "keuring_aanwezig": "",
+      "conform": "",
+      "datum_verslag": ""
+    },
+    "verwarming": {
+      "type": "",
+      "jaar": null
+    },
+    "licht": {
+      "leefruimte": "",
+      "slaapkamers": "",
+      "inkijk": ""
+    }
+  },
+  "buitenruimtes": {
+    "terras": {
+      "aantal": null,
+      "oppervlakte_totaal": null,
+      "orientatie_hoofdsterras": ""
+    },
+    "prive_tuin": {
+      "aanwezig": "",
+      "oppervlakte": null
+    }
+  },
+  "annexen": {
+    "kelder": {
+      "aanwezig": "",
+      "oppervlakte": null,
+      "opmerkingen": ""
+    },
+    "parking": {
+      "type": "",
+      "aantal": null,
+      "inbegrepen": ""
+    }
+  },
+  "juridisch": {
+    "ki": null,
+    "epc": {
+      "score": null,
+      "label": "",
+      "datum": ""
+    },
+    "mede_eigendom": {
+      "basisakte_beschikbaar": "",
+      "splitsingsplan_beschikbaar": ""
+    },
+    "procedures": ""
+  },
+  "marktcontext": {
+    "afstand_openbaar_vervoer_min": null,
+    "afstand_winkels_min": null,
+    "afstand_scholen_min": null,
+    "buurt_indruk": "",
+    "buurt_opmerkingen": ""
+  },
+  "verhuur": {
+    "verhuurd": "",
+    "huurprijs": null,
+    "startdatum": ""
+  },
+  "samenvatting": {
+    "pluspunten": "",
+    "minpunten": ""
+  },
+  "scores": {
+    "ligging": null,
+    "gebouw": null,
+    "afwerking": null,
+    "licht_en_zicht": null,
+    "buitenruimte": null,
+    "parking": null
+  }
+}
