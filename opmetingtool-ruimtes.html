@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Appartement Opmetingtool – Ruimtes, metingen & verdiepingen</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <style>
+    :root {
+      --bg: #f4f5fb;
+      --card-bg: #ffffff;
+      --accent: #2563eb;
+      --accent-soft: rgba(37, 99, 235, 0.08);
+      --border: #e2e4f0;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --danger: #dc2626;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #e5e7f5;
+      color: var(--text-main);
+    }
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    @media (min-width: 1024px) {
+      .app {
+        padding: 24px;
+      }
+    }
+
+    .card {
+      width: 100%;
+      max-width: 1200px;
+      background: var(--card-bg);
+      border-radius: 24px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      padding: 18px 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    @media (min-width: 768px) {
+      .card {
+        padding: 22px 22px 16px;
+      }
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .card-title {
+      font-size: 1.5rem;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pill {
+      font-size: 0.8rem;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .card-subtitle {
+      margin-top: 4px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .badge {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #0f172a;
+      color: #e5e7eb;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #22c55e;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.25fr);
+      gap: 16px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    @media (max-width: 960px) {
+      .layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .panel {
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      padding: 12px 12px 10px;
+      background: #f9fafb;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 0;
+    }
+
+    .panel-header {
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-header span.secondary {
+      font-size: 0.78rem;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: normal;
+    }
+
+    .section-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #4b5563;
+      margin-top: 4px;
+    }
+
+    .section-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 1.4fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 900px) {
+      .form-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .field label {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #4b5563;
+    }
+
+    .field small {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    select,
+    input[type="text"] {
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 10px 11px;
+      font-size: 1rem;
+      outline: none;
+      background: #ffffff;
+      min-height: 44px;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    select:focus,
+    input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.18);
+    }
+
+    .segments-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .segments-header small {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .segments-container {
+      margin-top: 6px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      padding: 8px 8px 6px;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    .segment-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.1fr) auto;
+      gap: 6px;
+      align-items: center;
+      padding: 4px 2px;
+    }
+
+    @media (max-width: 720px) {
+      .segment-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: auto auto;
+        grid-template-areas:
+          "len wid"
+          "area del";
+      }
+      .segment-row .seg-field-length { grid-area: len; }
+      .segment-row .seg-field-width { grid-area: wid; }
+      .segment-row .seg-field-area { grid-area: area; }
+      .segment-row .seg-actions { grid-area: del; justify-self: flex-end; }
+    }
+
+    .seg-field {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .seg-field label {
+      font-size: 0.78rem;
+      color: #6b7280;
+    }
+
+    .seg-field input {
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 8px 9px;
+      font-size: 0.95rem;
+      min-height: 40px;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .seg-field input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.18);
+    }
+
+    .seg-field span.area-value {
+      font-size: 0.85rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .seg-field span.area-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .seg-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .btn,
+    .btn-primary,
+    .btn-ghost,
+    .btn-danger,
+    .btn-mini {
+      cursor: pointer;
+      border-radius: 999px;
+      border: none;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      padding: 10px 16px;
+      font-weight: 600;
+      background: var(--accent);
+      color: white;
+      min-height: 44px;
+      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.35);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+      box-shadow: 0 7px 18px rgba(37, 99, 235, 0.35);
+    }
+
+    .btn-ghost {
+      border: 1px solid var(--border);
+      background: white;
+      padding: 8px 12px;
+      color: var(--text-muted);
+      min-height: 40px;
+    }
+
+    .btn-danger {
+      padding: 6px 10px;
+      background: rgba(220, 38, 38, 0.08);
+      color: var(--danger);
+      font-size: 0.8rem;
+      min-height: 34px;
+    }
+
+    .btn-mini {
+      padding: 4px 8px;
+      font-size: 0.78rem;
+      background: rgba(148, 163, 184, 0.16);
+      color: #374151;
+      min-height: 32px;
+      border: 1px solid #cbd5f5;
+    }
+
+    .form-actions {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .room-preview {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .room-preview span.value {
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .room-preview span.meta {
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+
+    .error {
+      margin-top: 6px;
+      font-size: 0.8rem;
+      color: var(--danger);
+      display: none;
+    }
+
+    .error.visible {
+      display: block;
+    }
+
+    .table-wrapper {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      border-radius: 12px;
+      background: white;
+      border: 1px solid #e5e7eb;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    thead {
+      background: #eef2ff;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    th,
+    td {
+      padding: 7px 6px;
+      text-align: left;
+    }
+
+    th {
+      font-weight: 600;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b7280;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr:nth-child(even) {
+      background: #f9fafb;
+    }
+
+    tbody tr:hover {
+      background: #edf2ff;
+    }
+
+    td {
+      border-bottom: 1px solid #edf2f7;
+    }
+
+    td.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .table-empty {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-align: center;
+      padding: 16px 8px;
+    }
+
+    .summary {
+      margin-top: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-size: 0.9rem;
+    }
+
+    .summary-primary {
+      padding: 10px 14px;
+      border-radius: 16px;
+      background: #0f172a;
+      color: #e5e7eb;
+      display: inline-flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .summary-primary span.value {
+      font-weight: 650;
+      font-size: 1.05rem;
+    }
+
+    .summary-primary span.label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: #94a3b8;
+    }
+
+    .summary-secondary {
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .summary-secondary span.dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #a855f7;
+    }
+
+    .summary-secondary small {
+      font-size: 0.8rem;
+    }
+
+    .footer {
+      margin-top: 6px;
+      font-size: 0.8rem;
+      color: #9ca3af;
+      text-align: right;
+    }
+
+   
+    @media print {
+      body {
+        background: #ffffff;
+      }
+      .app {
+        padding: 0;
+      }
+      .card {
+        box-shadow: none;
+        border-radius: 0;
+        border: none;
+      }
+      .layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      /* linker panel (formulier) verbergen */
+      .panel:first-of-type {
+        display: none;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">
+          Appartement opmetingtool
+          <span class="pill">Ruimtes, metingen &amp; verdiepingen</span>
+        </div>
+        <p class="card-subtitle">
+          Kies verdieping en ruimtetype, voeg één of meerdere metingen toe (bij complexe vormen) en bewaar de totale m² per ruimte.
+        </p>
+      </div>
+      <div class="badge">
+        <span class="badge-dot"></span>
+        iPad – ter plaatse
+      </div>
+    </div>
+
+    <div class="layout">
+      <!-- Linkerzijde: ruimte + segment-metingen -->
+      <div class="panel no-print">
+        <div class="panel-header">
+          <span>Nieuwe ruimte</span>
+          <span class="secondary">1 ruimte kan uit meerdere metingen bestaan.</span>
+        </div>
+
+        <form id="room-form" autocomplete="off">
+          <div class="form-grid">
+            <div class="field">
+              <label for="room-floor">Verdieping</label>
+              <select id="room-floor">
+                <option value="">-- Kies verdieping --</option>
+                <option value="M1">-1 – kelderverdieping</option>
+                <option value="GLV">0 – gelijkvloers</option>
+                <option value="V1">1 – 1e verdieping</option>
+                <option value="V2">2 – 2e verdieping</option>
+                <option value="V3">3 – 3e verdieping</option>
+                <option value="Dak">Dakverdieping</option>
+              </select>
+              <small>Bij duplex: bv. 0 voor beneden, 1 voor boven.</small>
+            </div>
+
+            <div class="field">
+              <label for="room-type">Ruimtetype</label>
+              <select id="room-type">
+                <option value="">-- Kies type --</option>
+
+                <!-- Woonruimtes -->
+                <option value="Living">Living</option>
+                <option value="Living+Keuken">Living + keuken</option>
+                <option value="Keuken">Keuken</option>
+                <option value="Slaapkamer">Slaapkamer</option>
+                <option value="Dressing">Dressing</option>
+
+                <!-- Natte & functionele ruimtes -->
+                <option value="Badkamer">Badkamer</option>
+                <option value="Toilet">Toilet</option>
+                <option value="Wasplaats">Wasplaats</option>
+                <option value="Berging">Berging</option>
+
+                <!-- Circulatie -->
+                <option value="Inkom">Inkom</option>
+                <option value="Hall">Hall</option>
+                <option value="Gang">Gang</option>
+
+                <!-- Niet-meetellen in totale m² -->
+                <option value="Garage">Garage (niet meetellen)</option>
+                <option value="Kelder">Kelder (niet meetellen)</option>
+                <option value="Terras">Terras (niet meetellen)</option>
+                
+                <!-- Overige -->
+                <option value="Zolder">Zolder</option>
+                <option value="Bureau">Bureau</option>
+                <option value="Anders">Anders</option>
+              </select>
+
+
+              <small>Bijv. Living, Slaapkamer, Keuken…</small>
+            </div>
+
+            <div class="field">
+              <label for="room-name">Naam ruimte (optioneel)</label>
+              <input
+                type="text"
+                id="room-name"
+                placeholder="Bijv. Slaapkamer ouders, Keuken boven…"
+              />
+              <small>Zo verschijnt de ruimte in het overzicht.</small>
+            </div>
+          </div>
+
+          <div class="segments-header">
+            <div>
+              <div class="section-title">Metingen binnen deze ruimte</div>
+              <div class="section-sub">
+                Bij een complexe vorm (L-vorm, hoekjes…) kan je meerdere rechthoeken ingeven. De m² worden opgeteld.
+              </div>
+            </div>
+            <button type="button" class="btn-mini" id="add-segment">
+              + Meting toevoegen
+            </button>
+          </div>
+
+          <div class="segments-container" id="segments-container">
+            <!-- dynamisch gevuld met meting-rijen -->
+          </div>
+
+          <div class="room-preview">
+            Totaal voor deze ruimte:
+            <span class="value"><span id="current-room-area">0,00</span> m²</span>
+            (<span id="current-room-segments">0</span> meting(en)).
+            <span class="meta" id="current-room-meta"></span>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">
+              Ruimte bewaren
+            </button>
+            <button type="button" class="btn-ghost" id="reset-room">
+              Formulier leegmaken
+            </button>
+          </div>
+
+          <div id="form-error" class="error">
+            Gelieve minstens een ruimtetype en één geldige meting (lengte &gt; 0 en breedte &gt; 0) in te geven.
+          </div>
+        </form>
+      </div>
+
+      <!-- Rechterzijde: overzicht ruimtes -->
+      <div class="panel">
+        <div class="panel-header">
+          <span>Overzicht ruimtes</span>
+          <span class="secondary">Totaal m² van het volledige appartement (alle verdiepingen).</span>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+            <tr>
+              <th>Verdieping</th>
+              <th>Ruimtetype</th>
+              <th>Naam</th>
+              <th class="num"># metingen</th>
+              <th class="num">Totaal m²</th>
+              <th></th>
+            </tr>
+            </thead>
+            <tbody id="room-table-body">
+            <tr>
+              <td colspan="6" class="table-empty">
+                Nog geen ruimtes toegevoegd. Vul links de ruimte in en klik op
+                <strong>“Ruimte bewaren”</strong>.
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="summary">
+          <div class="summary-primary">
+            <span class="label">Totaal appartement</span>
+            <span class="value"><span id="total-area">0,00</span>&nbsp;m²</span>
+          </div>
+          <div class="summary-secondary" id="per-floor-summary">
+            <span class="dot"></span>
+            <span><span id="room-count">0</span> ruimte(n) in de berekening.</span>
+          </div>
+        </div>
+
+        <div class="form-actions" style="margin-top: 10px; justify-content: flex-end;">
+          <button type="button" class="btn-ghost no-print" id="export-json">
+            JSON exporteren
+          </button>
+          <button type="button" class="btn-ghost no-print" id="export-pdf">
+            PDF / print
+          </button>
+          <button type="button" class="btn-ghost no-print" id="clear-all">
+            Alle ruimtes wissen
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      Elke ruimte kan bestaan uit meerdere rechthoekige metingen – per ruimte wordt ook de verdieping bewaard (handig voor duplex / triplex). Gebruik “PDF / print” om een rapport als PDF te bewaren.
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const STORAGE_KEY = "opmetingtool_rooms_v3";
+    const EXCLUDED_TYPES = [
+      "Garage (niet meetellen)",
+      "Kelder (niet meetellen)",
+      "Terras (niet meetellen)"
+    ];
+
+    let rooms = [];
+
+    const form = document.getElementById("room-form");
+    const roomFloorSelect = document.getElementById("room-floor");
+    const roomTypeSelect = document.getElementById("room-type");
+    const roomNameInput = document.getElementById("room-name");
+    const segmentsContainer = document.getElementById("segments-container");
+    const addSegmentBtn = document.getElementById("add-segment");
+    const resetRoomBtn = document.getElementById("reset-room");
+
+    const currentRoomAreaEl = document.getElementById("current-room-area");
+    const currentRoomSegmentsEl = document.getElementById("current-room-segments");
+    const currentRoomMetaEl = document.getElementById("current-room-meta");
+    const errorEl = document.getElementById("form-error");
+
+    const tableBody = document.getElementById("room-table-body");
+    const totalAreaEl = document.getElementById("total-area");
+    const roomCountEl = document.getElementById("room-count");
+    const perFloorSummaryEl = document.getElementById("per-floor-summary");
+    const clearAllBtn = document.getElementById("clear-all");
+
+    const exportJsonBtn = document.getElementById("export-json");
+    const exportPdfBtn = document.getElementById("export-pdf");
+
+    function formatNumber(value) {
+      if (isNaN(value)) return "0,00";
+      return value.toFixed(2).replace(".", ",");
+    }
+
+    function parseInputNumber(el) {
+      const raw = (el.value || "").replace(",", ".").trim();
+      const parsed = parseFloat(raw);
+      return isNaN(parsed) ? null : parsed;
+    }
+
+    function floorLabelFromValue(value) {
+      switch (value) {
+        case "M1": return "-1 – kelderverdieping";
+        case "GLV": return "0 – gelijkvloers";
+        case "V1": return "1 – 1e verdieping";
+        case "V2": return "2 – 2e verdieping";
+        case "V3": return "3 – 3e verdieping";
+        case "Dak": return "Dakverdieping";
+        default: return "";
+      }
+    }
+
+    function saveToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(rooms));
+      } catch (e) {
+        // localStorage niet beschikbaar? Geen probleem.
+      }
+    }
+
+    function loadFromStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        if (Array.isArray(data)) {
+          rooms = data.map(r => ({
+            id: r.id || Date.now() + Math.random(),
+            floorValue: r.floorValue || "",
+            floorLabel: r.floorLabel || floorLabelFromValue(r.floorValue || ""),
+            type: r.type || "",
+            name: r.name || "",
+            segments: Array.isArray(r.segments)
+              ? r.segments.map(s => ({
+                  length: Number(s.length),
+                  width: Number(s.width),
+                  area: Number(s.area)
+                })).filter(s => s.length > 0 && s.width > 0)
+              : []
+          }));
+        }
+      } catch (e) {
+        rooms = [];
+      }
+    }
+
+    function getTypeCount(typeText) {
+      return rooms.filter(r => r.type === typeText).length;
+    }
+
+    function addSegmentRow(lengthValue = "", widthValue = "") {
+      const row = document.createElement("div");
+      row.className = "segment-row";
+
+      const fieldLen = document.createElement("div");
+      fieldLen.className = "seg-field seg-field-length";
+      const labelLen = document.createElement("label");
+      labelLen.textContent = "Lengte (m)";
+      const inputLen = document.createElement("input");
+      inputLen.type = "text";
+      inputLen.inputMode = "decimal";
+      inputLen.placeholder = "4,50";
+      inputLen.value = lengthValue;
+      fieldLen.appendChild(labelLen);
+      fieldLen.appendChild(inputLen);
+
+      const fieldWid = document.createElement("div");
+      fieldWid.className = "seg-field seg-field-width";
+      const labelWid = document.createElement("label");
+      labelWid.textContent = "Breedte (m)";
+      const inputWid = document.createElement("input");
+      inputWid.type = "text";
+      inputWid.inputMode = "decimal";
+      inputWid.placeholder = "3,20";
+      inputWid.value = widthValue;
+      fieldWid.appendChild(labelWid);
+      fieldWid.appendChild(inputWid);
+
+      const fieldArea = document.createElement("div");
+      fieldArea.className = "seg-field seg-field-area";
+      const labelArea = document.createElement("label");
+      labelArea.textContent = "Oppervlakte";
+      const areaValue = document.createElement("span");
+      areaValue.className = "area-value";
+      areaValue.textContent = "0,00 m²";
+      const areaLabel = document.createElement("span");
+      areaLabel.className = "area-label";
+      areaLabel.textContent = "Lengte × breedte";
+      fieldArea.appendChild(labelArea);
+      fieldArea.appendChild(areaValue);
+      fieldArea.appendChild(areaLabel);
+
+      const actions = document.createElement("div");
+      actions.className = "seg-actions";
+      const delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "btn-danger";
+      delBtn.textContent = "Verwijderen";
+      actions.appendChild(delBtn);
+
+      row.appendChild(fieldLen);
+      row.appendChild(fieldWid);
+      row.appendChild(fieldArea);
+      row.appendChild(actions);
+
+      segmentsContainer.appendChild(row);
+      updateCurrentRoomPreview();
+    }
+
+    function updateCurrentRoomPreview() {
+      const rows = Array.from(segmentsContainer.getElementsByClassName("segment-row"));
+      let total = 0;
+      let validCount = 0;
+
+      rows.forEach(row => {
+        const lenInput = row.querySelector(".seg-field-length input");
+        const widInput = row.querySelector(".seg-field-width input");
+        const areaSpan = row.querySelector(".seg-field-area .area-value");
+
+        const length = parseInputNumber(lenInput);
+        const width = parseInputNumber(widInput);
+
+        let area = 0;
+        if (length !== null && width !== null && length > 0 && width > 0) {
+          area = length * width;
+          validCount++;
+        }
+
+        total += area;
+        areaSpan.textContent = formatNumber(area) + " m²";
+      });
+
+      currentRoomAreaEl.textContent = formatNumber(total);
+      currentRoomSegmentsEl.textContent = validCount.toString();
+
+      const floorText = floorLabelFromValue(roomFloorSelect.value);
+      const typeText = roomTypeSelect.value
+        ? roomTypeSelect.options[roomTypeSelect.selectedIndex].text
+        : "";
+      const bits = [];
+      if (floorText) bits.push("Verdieping: " + floorText);
+      if (typeText) bits.push("Type: " + typeText);
+      currentRoomMetaEl.textContent = bits.length ? " (" + bits.join(" – ") + ")" : "";
+    }
+
+    function resetRoomForm() {
+      roomFloorSelect.value = "";
+      roomTypeSelect.value = "";
+      roomNameInput.value = "";
+      errorEl.classList.remove("visible");
+      segmentsContainer.innerHTML = "";
+      addSegmentRow();
+      updateCurrentRoomPreview();
+      roomFloorSelect.focus();
+    }
+
+    function renderPerFloorSummary(totalArea) {
+      if (rooms.length === 0) {
+        perFloorSummaryEl.innerHTML =
+          '<span class="dot"></span><span><span id="room-count">0</span> ruimte(n) in de berekening.</span>';
+        return;
+      }
+
+      const perFloor = {};
+      rooms.forEach(room => {
+        const label = room.floorLabel || "Onbekend";
+        const area = room.segments.reduce((sum, s) => sum + (s.area || 0), 0);
+        if (!perFloor[label]) perFloor[label] = 0;
+        perFloor[label] += area;
+      });
+
+      const fragments = Object.entries(perFloor)
+        .map(([label, area]) => `${label}: ${formatNumber(area)} m²`)
+        .join(" • ");
+
+      perFloorSummaryEl.innerHTML =
+        '<span class="dot"></span>' +
+        `<span><span id="room-count">${rooms.length}</span> ruimte(n) in de berekening. ` +
+        (fragments ? `<small>${fragments}</small>` : "") +
+        "</span>";
+    }
+
+    function renderRoomsTable() {
+      tableBody.innerHTML = "";
+
+      if (rooms.length === 0) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 6;
+        td.className = "table-empty";
+        td.textContent =
+          "Nog geen ruimtes toegevoegd. Vul links de ruimte in en klik op “Ruimte bewaren”.";
+        tr.appendChild(td);
+        tableBody.appendChild(tr);
+        totalAreaEl.textContent = "0,00";
+        roomCountEl.textContent = "0";
+        renderPerFloorSummary(0);
+        return;
+      }
+
+      let total = 0;
+
+      rooms.forEach((room, index) => {
+        const tr = document.createElement("tr");
+
+        const floorTd = document.createElement("td");
+        floorTd.textContent = room.floorLabel || "—";
+
+        const typeTd = document.createElement("td");
+        typeTd.textContent = room.type || "-";
+
+        const nameTd = document.createElement("td");
+        nameTd.textContent = room.name || "—";
+
+        const segCount = room.segments.length;
+        const segCountTd = document.createElement("td");
+        segCountTd.className = "num";
+        segCountTd.textContent = segCount.toString();
+
+        const roomArea = room.segments.reduce((sum, s) => sum + (s.area || 0), 0);
+        if (!EXCLUDED_TYPES.includes(room.type)) {
+         total += roomArea;
+        }
+
+
+        const areaTd = document.createElement("td");
+        areaTd.className = "num";
+        areaTd.textContent = formatNumber(roomArea);
+
+        const actionTd = document.createElement("td");
+        actionTd.style.textAlign = "right";
+        const delBtn = document.createElement("button");
+        delBtn.type = "button";
+        delBtn.className = "btn-danger no-print";
+        delBtn.textContent = "Verwijderen";
+        delBtn.dataset.index = index;
+        actionTd.appendChild(delBtn);
+
+        tr.appendChild(floorTd);
+        tr.appendChild(typeTd);
+        tr.appendChild(nameTd);
+        tr.appendChild(segCountTd);
+        tr.appendChild(areaTd);
+        tr.appendChild(actionTd);
+
+        tableBody.appendChild(tr);
+      });
+
+      totalAreaEl.textContent = formatNumber(total);
+      roomCountEl.textContent = rooms.length.toString();
+      renderPerFloorSummary(total);
+    }
+
+    function buildExportData() {
+      const perFloor = {};
+      let totalArea = 0;
+
+      const exportRooms = rooms.map(room => {
+        const roomArea = room.segments.reduce((sum, s) => sum + (s.area || 0), 0);
+        totalArea += roomArea;
+        const floorLabel = room.floorLabel || floorLabelFromValue(room.floorValue) || "Onbekend";
+
+        if (!perFloor[floorLabel]) perFloor[floorLabel] = 0;
+        perFloor[floorLabel] += roomArea;
+
+        return {
+          id: room.id,
+          floor: {
+            code: room.floorValue || null,
+            label: floorLabel
+          },
+          type: room.type || null,
+          name: room.name || null,
+          total_area_m2: Number(roomArea.toFixed(2)),
+          segments: room.segments.map(s => ({
+            length_m: Number((s.length || 0).toFixed(3)),
+            width_m: Number((s.width || 0).toFixed(3)),
+            area_m2: Number((s.area || 0).toFixed(3))
+          }))
+        };
+      });
+
+      const perFloorExport = {};
+      Object.keys(perFloor).forEach(label => {
+        perFloorExport[label] = Number(perFloor[label].toFixed(2));
+      });
+
+      return {
+        generated_at: new Date().toISOString(),
+        total_area_m2: Number(totalArea.toFixed(2)),
+        per_floor_area_m2: perFloorExport,
+        room_count: exportRooms.length,
+        rooms: exportRooms
+      };
+    }
+
+    function downloadJson() {
+      if (rooms.length === 0) {
+        alert("Geen ruimtes om te exporteren. Voeg eerst ruimtes toe.");
+        return;
+      }
+
+      const data = buildExportData();
+      const jsonString = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonString], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+      link.href = url;
+      link.download = "appartement-opmeting-" + ts + ".json";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    function exportPdf() {
+      if (rooms.length === 0) {
+        const proceed = window.confirm(
+          "Er zijn nog geen ruimtes toegevoegd. Wil je toch een lege PDF/print maken?"
+        );
+        if (!proceed) return;
+      }
+      window.print();
+    }
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      errorEl.classList.remove("visible");
+
+      const typeValue = roomTypeSelect.value;
+      if (!typeValue) {
+        errorEl.textContent = "Gelieve een ruimtetype te kiezen.";
+        errorEl.classList.add("visible");
+        return;
+      }
+
+      const rows = Array.from(segmentsContainer.getElementsByClassName("segment-row"));
+      const segments = [];
+      rows.forEach(row => {
+        const lenInput = row.querySelector(".seg-field-length input");
+        const widInput = row.querySelector(".seg-field-width input");
+        const length = parseInputNumber(lenInput);
+        const width = parseInputNumber(widInput);
+        if (length !== null && width !== null && length > 0 && width > 0) {
+          segments.push({
+            length,
+            width,
+            area: length * width
+          });
+        }
+      });
+
+      if (segments.length === 0) {
+        errorEl.textContent = "Gelieve minstens één meting in te vullen (lengte en breedte groter dan 0).";
+        errorEl.classList.add("visible");
+        return;
+      }
+
+      let name = (roomNameInput.value || "").trim();
+      const typeText = roomTypeSelect.options[roomTypeSelect.selectedIndex].text;
+      if (!name) {
+        const countForType = getTypeCount(typeText) + 1;
+        name = typeText + " " + countForType;
+      }
+
+      const floorValue = roomFloorSelect.value;
+      const floorLabel = floorLabelFromValue(floorValue) || "—";
+
+      const room = {
+        id: Date.now() + Math.random(),
+        floorValue,
+        floorLabel,
+        type: typeText,
+        name,
+        segments
+      };
+
+      rooms.push(room);
+      saveToStorage();
+      renderRoomsTable();
+      resetRoomForm();
+    });
+
+    addSegmentBtn.addEventListener("click", function () {
+      addSegmentRow();
+    });
+
+    segmentsContainer.addEventListener("input", function (event) {
+      if (event.target && event.target.matches("input")) {
+        updateCurrentRoomPreview();
+      }
+    });
+
+    segmentsContainer.addEventListener("click", function (event) {
+      const target = event.target;
+      if (target && target.matches(".btn-danger")) {
+        const rows = Array.from(segmentsContainer.getElementsByClassName("segment-row"));
+        if (rows.length <= 1) {
+          rows[0].querySelector(".seg-field-length input").value = "";
+          rows[0].querySelector(".seg-field-width input").value = "";
+        } else {
+          target.closest(".segment-row").remove();
+        }
+        updateCurrentRoomPreview();
+      }
+    });
+
+    resetRoomBtn.addEventListener("click", function () {
+      resetRoomForm();
+    });
+
+    clearAllBtn.addEventListener("click", function () {
+      if (rooms.length === 0) return;
+      const confirmed = window.confirm("Ben je zeker dat je alle ruimtes wil wissen?");
+      if (!confirmed) return;
+      rooms = [];
+      saveToStorage();
+      renderRoomsTable();
+    });
+
+    roomTypeSelect.addEventListener("change", function () {
+      if (!roomNameInput.value.trim() && roomTypeSelect.value) {
+        const typeText = roomTypeSelect.options[roomTypeSelect.selectedIndex].text;
+        const countForType = getTypeCount(typeText) + 1;
+        roomNameInput.value = typeText + " " + countForType;
+      }
+      updateCurrentRoomPreview();
+    });
+
+    roomFloorSelect.addEventListener("change", function () {
+      updateCurrentRoomPreview();
+    });
+
+    exportJsonBtn.addEventListener("click", downloadJson);
+    exportPdfBtn.addEventListener("click", exportPdf);
+
+    // Init
+    loadFromStorage();
+    renderRoomsTable();
+    resetRoomForm();
+  })();
+</script>
+</body>
+</html>
