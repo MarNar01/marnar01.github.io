@@ -725,17 +725,21 @@
           </div>
         </div>
 
-        <div class="form-actions" style="margin-top: 10px; justify-content: flex-end;">
-          <button type="button" class="btn-ghost" id="export-json">
-            JSON exporteren
-          </button>
-          <button type="button" class="btn-ghost" id="export-pdf">
-            PDF / print
-          </button>
-          <button type="button" class="btn-ghost" id="clear-all">
-            Alle ruimtes wissen
-          </button>
-        </div>
+       <div class="form-actions" style="margin-top: 10px; justify-content: flex-end;">
+        <button type="button" class="btn-ghost" id="export-json">
+          JSON exporteren
+        </button>
+        <button type="button" class="btn-ghost" id="export-pdf">
+          PDF / print
+        </button>
+        <button type="button" class="btn-ghost" id="email-summary">
+          Samenvatting mailen
+        </button>
+        <button type="button" class="btn-ghost" id="clear-all">
+          Alle ruimtes wissen
+        </button>
+      </div>
+ 
       </div>
     </div>
 
@@ -779,6 +783,7 @@
 
     const exportJsonBtn = document.getElementById("export-json");
     const exportPdfBtn = document.getElementById("export-pdf");
+    const emailSummaryBtn = document.getElementById("email-summary");
 
     const addressInput = document.getElementById("apartment-address");
     const addressDisplay = document.getElementById("address-display");
@@ -1145,6 +1150,76 @@
       };
     }
 
+    function buildEmailSummaryText() {
+      const address = localStorage.getItem(STORAGE_ADDRESS_KEY) || "(adres niet ingevuld)";
+
+      let totalIncluded = 0;
+      const lines = [];
+
+      lines.push("Opmeting appartement");
+      lines.push("");
+      lines.push("Adres: " + address);
+      lines.push("Datum: " + new Date().toLocaleDateString("nl-BE"));
+      lines.push("");
+
+      rooms.forEach(room => {
+        const roomArea = room.segments.reduce((sum, s) => sum + (s.area || 0), 0);
+        const excluded = EXCLUDED_TYPES.includes(room.type);
+        if (!excluded) {
+          totalIncluded += roomArea;
+        }
+      });
+
+      lines.push("Totaal meetellende oppervlakte: " + formatNumber(totalIncluded) + " m²");
+      lines.push("");
+
+      lines.push("Per ruimte:");
+      rooms.forEach(room => {
+        const roomArea = room.segments.reduce((sum, s) => sum + (s.area || 0), 0);
+        const excluded = EXCLUDED_TYPES.includes(room.type);
+        const flag = excluded ? " (NIET meegeteld in totaal)" : "";
+        const floor = room.floorLabel || floorLabelFromValue(room.floorValue) || "";
+        const name = room.name || "";
+        lines.push(
+           "- " +
+          (floor ? floor + " – " : "") +
+          room.type +
+          (name ? " – " + name : "") +
+          ": " +
+          formatNumber(roomArea) +
+          " m²" +
+          flag
+       );
+      });
+
+      if (rooms.length === 0) {
+        lines.push("(Nog geen ruimtes ingevoerd)");
+      }
+
+      lines.push("");
+      lines.push("Automatisch gegenereerd door de opmetingtool.");
+
+      return lines.join("\n");
+    }
+
+    function emailSummary() {
+      if (rooms.length === 0) {
+        alert("Er zijn nog geen ruimtes ingevoerd om te mailen.");
+      return;
+      }
+
+    const address = localStorage.getItem(STORAGE_ADDRESS_KEY) || "";
+    const subjectBase = address ? "Opmeting " + address : "Opmeting appartement";
+    const subject = encodeURIComponent(subjectBase);
+    const body = encodeURIComponent(buildEmailSummaryText());
+
+     // Open standaard mail-app met ingevulde subject + body
+    window.location.href = "mailto:?subject=" + subject + "&body=" + body;
+  }
+
+
+
+
     function downloadJson() {
       if (rooms.length === 0) {
         alert("Geen ruimtes om te exporteren. Voeg eerst ruimtes toe.");
@@ -1311,6 +1386,7 @@
 
     exportJsonBtn.addEventListener("click", downloadJson);
     exportPdfBtn.addEventListener("click", exportPdf);
+    emailSummaryBtn.addEventListener("click", emailSummary);
 
     // Init
     loadFromStorage();
