@@ -514,7 +514,6 @@
       text-align: right;
     }
 
-   
     @media print {
       body {
         background: #ffffff;
@@ -561,7 +560,19 @@
 
     <div class="layout">
       <!-- Linkerzijde: ruimte + segment-metingen -->
-      <div class="panel no-print">
+      <div class="panel">
+        <!-- Adresveld -->
+        <div class="field" style="margin-bottom: 14px;">
+          <label for="apartment-address" style="font-size: 1rem; font-weight: 600;">Adres van het appartement</label>
+          <input
+            type="text"
+            id="apartment-address"
+            placeholder="Bijv. Korenmarkt 12, 3000 Leuven – Bus 3"
+            style="font-size: 1rem;"
+          />
+          <small>Dit adres verschijnt in JSON-export en PDF/print.</small>
+        </div>
+
         <div class="panel-header">
           <span>Nieuwe ruimte</span>
           <span class="secondary">1 ruimte kan uit meerdere metingen bestaan.</span>
@@ -580,7 +591,7 @@
                 <option value="V3">3 – 3e verdieping</option>
                 <option value="Dak">Dakverdieping</option>
               </select>
-              <small>Bij duplex: bv. 0 voor beneden, 1 voor boven.</small>
+              <small>Bij duplex: bv. -1 voor kelder, 0 beneden, 1 boven.</small>
             </div>
 
             <div class="field">
@@ -607,17 +618,15 @@
                 <option value="Gang">Gang</option>
 
                 <!-- Niet-meetellen in totale m² -->
-                <option value="Garage">Garage (niet meetellen)</option>
-                <option value="Kelder">Kelder (niet meetellen)</option>
-                <option value="Terras">Terras (niet meetellen)</option>
-                
+                <option value="Garage (niet meetellen)">Garage (niet meetellen)</option>
+                <option value="Kelder (niet meetellen)">Kelder (niet meetellen)</option>
+                <option value="Terras (niet meetellen)">Terras (niet meetellen)</option>
+
                 <!-- Overige -->
                 <option value="Zolder">Zolder</option>
                 <option value="Bureau">Bureau</option>
                 <option value="Anders">Anders</option>
               </select>
-
-
               <small>Bijv. Living, Slaapkamer, Keuken…</small>
             </div>
 
@@ -674,7 +683,12 @@
       <div class="panel">
         <div class="panel-header">
           <span>Overzicht ruimtes</span>
-          <span class="secondary">Totaal m² van het volledige appartement (alle verdiepingen).</span>
+          <span class="secondary">Totaal m² van het volledige appartement (meetellende ruimtes).</span>
+        </div>
+
+        <!-- Adresweergave voor overzicht / PDF -->
+        <div id="address-display" style="font-size: 1rem; font-weight: 600; margin-bottom: 10px;">
+          Adres niet ingevuld
         </div>
 
         <div class="table-wrapper">
@@ -702,7 +716,7 @@
 
         <div class="summary">
           <div class="summary-primary">
-            <span class="label">Totaal appartement</span>
+            <span class="label">Totaal appartement (meetellend)</span>
             <span class="value"><span id="total-area">0,00</span>&nbsp;m²</span>
           </div>
           <div class="summary-secondary" id="per-floor-summary">
@@ -712,13 +726,13 @@
         </div>
 
         <div class="form-actions" style="margin-top: 10px; justify-content: flex-end;">
-          <button type="button" class="btn-ghost no-print" id="export-json">
+          <button type="button" class="btn-ghost" id="export-json">
             JSON exporteren
           </button>
-          <button type="button" class="btn-ghost no-print" id="export-pdf">
+          <button type="button" class="btn-ghost" id="export-pdf">
             PDF / print
           </button>
-          <button type="button" class="btn-ghost no-print" id="clear-all">
+          <button type="button" class="btn-ghost" id="clear-all">
             Alle ruimtes wissen
           </button>
         </div>
@@ -726,7 +740,7 @@
     </div>
 
     <div class="footer">
-      Elke ruimte kan bestaan uit meerdere rechthoekige metingen – per ruimte wordt ook de verdieping bewaard (handig voor duplex / triplex). Gebruik “PDF / print” om een rapport als PDF te bewaren.
+      Elke ruimte kan bestaan uit meerdere rechthoekige metingen – per ruimte wordt ook de verdieping bewaard (handig voor duplex / triplex). Garage, kelder en terras worden apart gehouden en niet meegeteld in de totale m².
     </div>
   </div>
 </div>
@@ -734,6 +748,8 @@
 <script>
   (function () {
     const STORAGE_KEY = "opmetingtool_rooms_v3";
+    const STORAGE_ADDRESS_KEY = "opmetingtool_address_v1";
+    // Types die NIET meetellen in het totaal
     const EXCLUDED_TYPES = [
       "Garage (niet meetellen)",
       "Kelder (niet meetellen)",
@@ -763,6 +779,9 @@
 
     const exportJsonBtn = document.getElementById("export-json");
     const exportPdfBtn = document.getElementById("export-pdf");
+
+    const addressInput = document.getElementById("apartment-address");
+    const addressDisplay = document.getElementById("address-display");
 
     function formatNumber(value) {
       if (isNaN(value)) return "0,00";
@@ -795,30 +814,47 @@
       }
     }
 
+    function updateAddressDisplay() {
+      const address = localStorage.getItem(STORAGE_ADDRESS_KEY) || "";
+      addressDisplay.textContent = address ? "Adres: " + address : "Adres niet ingevuld";
+    }
+
     function loadFromStorage() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return;
-        const data = JSON.parse(raw);
-        if (Array.isArray(data)) {
-          rooms = data.map(r => ({
-            id: r.id || Date.now() + Math.random(),
-            floorValue: r.floorValue || "",
-            floorLabel: r.floorLabel || floorLabelFromValue(r.floorValue || ""),
-            type: r.type || "",
-            name: r.name || "",
-            segments: Array.isArray(r.segments)
-              ? r.segments.map(s => ({
-                  length: Number(s.length),
-                  width: Number(s.width),
-                  area: Number(s.area)
-                })).filter(s => s.length > 0 && s.width > 0)
-              : []
-          }));
+        if (raw) {
+          const data = JSON.parse(raw);
+          if (Array.isArray(data)) {
+            rooms = data.map(r => ({
+              id: r.id || Date.now() + Math.random(),
+              floorValue: r.floorValue || "",
+              floorLabel: r.floorLabel || floorLabelFromValue(r.floorValue || ""),
+              type: r.type || "",
+              name: r.name || "",
+              segments: Array.isArray(r.segments)
+                ? r.segments.map(s => ({
+                    length: Number(s.length),
+                    width: Number(s.width),
+                    area: Number(s.area)
+                  })).filter(s => s.length > 0 && s.width > 0)
+                : []
+            }));
+          }
         }
       } catch (e) {
         rooms = [];
       }
+
+      // Adres laden
+      try {
+        const storedAddress = localStorage.getItem(STORAGE_ADDRESS_KEY);
+        if (storedAddress) {
+          addressInput.value = storedAddress;
+        }
+      } catch (e) {
+        // niets
+      }
+      updateAddressDisplay();
     }
 
     function getTypeCount(typeText) {
@@ -931,30 +967,51 @@
       roomFloorSelect.focus();
     }
 
-    function renderPerFloorSummary(totalArea) {
+    function renderPerFloorSummary(totalAreaIncluded) {
       if (rooms.length === 0) {
         perFloorSummaryEl.innerHTML =
           '<span class="dot"></span><span><span id="room-count">0</span> ruimte(n) in de berekening.</span>';
         return;
       }
 
-      const perFloor = {};
+      const perFloorIncluded = {};
+      const perFloorExcluded = {};
+
       rooms.forEach(room => {
         const label = room.floorLabel || "Onbekend";
-        const area = room.segments.reduce((sum, s) => sum + (s.area || 0), 0);
-        if (!perFloor[label]) perFloor[label] = 0;
-        perFloor[label] += area;
+        const roomArea = room.segments.reduce((sum, s) => sum + (s.area || 0), 0);
+        const excluded = EXCLUDED_TYPES.includes(room.type);
+
+        if (excluded) {
+          if (!perFloorExcluded[label]) perFloorExcluded[label] = 0;
+          perFloorExcluded[label] += roomArea;
+        } else {
+          if (!perFloorIncluded[label]) perFloorIncluded[label] = 0;
+          perFloorIncluded[label] += roomArea;
+        }
       });
 
-      const fragments = Object.entries(perFloor)
+      const incFragments = Object.entries(perFloorIncluded)
         .map(([label, area]) => `${label}: ${formatNumber(area)} m²`)
         .join(" • ");
 
-      perFloorSummaryEl.innerHTML =
+      const excFragments = Object.entries(perFloorExcluded)
+        .map(([label, area]) => `${label}: ${formatNumber(area)} m² (niet meegeteld)`)
+        .join(" • ");
+
+      let html =
         '<span class="dot"></span>' +
-        `<span><span id="room-count">${rooms.length}</span> ruimte(n) in de berekening. ` +
-        (fragments ? `<small>${fragments}</small>` : "") +
-        "</span>";
+        `<span><span id="room-count">${rooms.length}</span> ruimte(n) in de berekening.`;
+
+      if (incFragments) {
+        html += ` <small>${incFragments}</small>`;
+      }
+      if (excFragments) {
+        html += ` <small>${excFragments}</small>`;
+      }
+
+      html += "</span>";
+      perFloorSummaryEl.innerHTML = html;
     }
 
     function renderRoomsTable() {
@@ -975,7 +1032,7 @@
         return;
       }
 
-      let total = 0;
+      let totalIncluded = 0;
 
       rooms.forEach((room, index) => {
         const tr = document.createElement("tr");
@@ -995,20 +1052,20 @@
         segCountTd.textContent = segCount.toString();
 
         const roomArea = room.segments.reduce((sum, s) => sum + (s.area || 0), 0);
-        if (!EXCLUDED_TYPES.includes(room.type)) {
-         total += roomArea;
+        const excluded = EXCLUDED_TYPES.includes(room.type);
+        if (!excluded) {
+          totalIncluded += roomArea;
         }
-
 
         const areaTd = document.createElement("td");
         areaTd.className = "num";
-        areaTd.textContent = formatNumber(roomArea);
+        areaTd.textContent = formatNumber(roomArea) + (excluded ? " *" : "");
 
         const actionTd = document.createElement("td");
         actionTd.style.textAlign = "right";
         const delBtn = document.createElement("button");
         delBtn.type = "button";
-        delBtn.className = "btn-danger no-print";
+        delBtn.className = "btn-danger";
         delBtn.textContent = "Verwijderen";
         delBtn.dataset.index = index;
         actionTd.appendChild(delBtn);
@@ -1023,22 +1080,29 @@
         tableBody.appendChild(tr);
       });
 
-      totalAreaEl.textContent = formatNumber(total);
+      totalAreaEl.textContent = formatNumber(totalIncluded);
       roomCountEl.textContent = rooms.length.toString();
-      renderPerFloorSummary(total);
+      renderPerFloorSummary(totalIncluded);
     }
 
     function buildExportData() {
-      const perFloor = {};
-      let totalArea = 0;
+      const perFloorIncluded = {};
+      const perFloorExcluded = {};
+      let totalIncluded = 0;
 
       const exportRooms = rooms.map(room => {
         const roomArea = room.segments.reduce((sum, s) => sum + (s.area || 0), 0);
-        totalArea += roomArea;
         const floorLabel = room.floorLabel || floorLabelFromValue(room.floorValue) || "Onbekend";
+        const excluded = EXCLUDED_TYPES.includes(room.type);
 
-        if (!perFloor[floorLabel]) perFloor[floorLabel] = 0;
-        perFloor[floorLabel] += roomArea;
+        if (excluded) {
+          if (!perFloorExcluded[floorLabel]) perFloorExcluded[floorLabel] = 0;
+          perFloorExcluded[floorLabel] += roomArea;
+        } else {
+          if (!perFloorIncluded[floorLabel]) perFloorIncluded[floorLabel] = 0;
+          perFloorIncluded[floorLabel] += roomArea;
+          totalIncluded += roomArea;
+        }
 
         return {
           id: room.id,
@@ -1049,6 +1113,7 @@
           type: room.type || null,
           name: room.name || null,
           total_area_m2: Number(roomArea.toFixed(2)),
+          included_in_total: !excluded,
           segments: room.segments.map(s => ({
             length_m: Number((s.length || 0).toFixed(3)),
             width_m: Number((s.width || 0).toFixed(3)),
@@ -1057,15 +1122,24 @@
         };
       });
 
-      const perFloorExport = {};
-      Object.keys(perFloor).forEach(label => {
-        perFloorExport[label] = Number(perFloor[label].toFixed(2));
+      const perFloorIncludedExport = {};
+      Object.keys(perFloorIncluded).forEach(label => {
+        perFloorIncludedExport[label] = Number(perFloorIncluded[label].toFixed(2));
       });
+
+      const perFloorExcludedExport = {};
+      Object.keys(perFloorExcluded).forEach(label => {
+        perFloorExcludedExport[label] = Number(perFloorExcluded[label].toFixed(2));
+      });
+
+      const address = localStorage.getItem(STORAGE_ADDRESS_KEY) || null;
 
       return {
         generated_at: new Date().toISOString(),
-        total_area_m2: Number(totalArea.toFixed(2)),
-        per_floor_area_m2: perFloorExport,
+        address: address,
+        total_area_included_m2: Number(totalIncluded.toFixed(2)),
+        per_floor_included_area_m2: perFloorIncludedExport,
+        per_floor_excluded_area_m2: perFloorExcludedExport,
         room_count: exportRooms.length,
         rooms: exportRooms
       };
@@ -1197,6 +1271,21 @@
       renderRoomsTable();
     });
 
+    // Verwijderen van een volledige ruimte (rechts in de tabel)
+    tableBody.addEventListener("click", function (event) {
+      const target = event.target;
+      if (target && target.matches(".btn-danger")) {
+      const index = parseInt(target.dataset.index, 10);
+      if (!isNaN(index)) {
+      const confirmed = window.confirm("Deze ruimte verwijderen?");
+      if (!confirmed) return;
+      rooms.splice(index, 1);
+      saveToStorage();
+      renderRoomsTable();
+      }
+      }
+  });
+
     roomTypeSelect.addEventListener("change", function () {
       if (!roomNameInput.value.trim() && roomTypeSelect.value) {
         const typeText = roomTypeSelect.options[roomTypeSelect.selectedIndex].text;
@@ -1208,6 +1297,16 @@
 
     roomFloorSelect.addEventListener("change", function () {
       updateCurrentRoomPreview();
+    });
+
+    addressInput.addEventListener("input", function () {
+      const value = addressInput.value.trim();
+      try {
+        localStorage.setItem(STORAGE_ADDRESS_KEY, value);
+      } catch (e) {
+        // ignore
+      }
+      updateAddressDisplay();
     });
 
     exportJsonBtn.addEventListener("click", downloadJson);
